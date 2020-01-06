@@ -1,0 +1,96 @@
+library(gtools)
+library(tidyverse)
+
+# FUNCTIONS
+# Accepts a vector input to test for 15s. Returns a single value of the count.
+count_fifs <- function(vtr){
+  cmb_2 <- combinations(6, 2, v = vtr, set = FALSE)
+  fif_2 <- ifelse(rowSums(cmb_2) == 15, 1, 0)
+  cmb_3 <- combinations(6, 3, v = vtr, set = FALSE)
+  fif_3 <- ifelse(rowSums(cmb_3) == 15, 1, 0)
+  cmb_4 <- combinations(6, 4, v = vtr, set = FALSE)
+  fif_4 <- ifelse(rowSums(cmb_4) == 15, 1, 0)
+  cmb_5 <- combinations(6, 5, v = vtr, set = FALSE)
+  fif_5 <- ifelse(rowSums(cmb_5) == 15, 1, 0)
+  cmb_6 <- combinations(6, 6, v = vtr, set = FALSE)
+  fif_6 <- ifelse(rowSums(cmb_6) == 15, 1, 0)
+  return(sum(fif_2, fif_3, fif_4, fif_5, fif_6))
+}
+
+# Takes vector input. If 2 distinct runs in the hand (i.e. 3, 4, 5, 10, J, Q),
+# returns a list of length 2 with the values in each run, otherwise
+# returns the run to use for scoring. Returns empty vector if no runs are 
+# present.
+xtract_run <- function(x){
+  ind <- diff(x) %in% c(1, 1) | diff(x) %in% run_4_mat | 
+    diff(x) %in% run_5_mat | diff(x) %in% run_6_mat 
+  if(all(ind == c(T, T, F, T, T))){
+    return(list(x[1:3], x[4:6]))
+  }
+  locate <- which(ind)
+  out <- c(locate, locate[length(locate)]+1)
+  if(length(out) < 3){                      # Temporary fix for bug using flow control - better way?
+    return(NULL)
+  }
+  return(x[out])
+}
+
+# Generate a standard deck of 52 cards and assign values for Cribbage
+suits <- c("Clubs", "Diamonds", "Hearts", "Spades")
+ranks <- c("A", "2", "3", "4", "5", "6", "7", "8", 
+           "9", "10", "J", "Q", "K")
+card_vals <- c(1:10, rep(10, 3))
+card_vals <- c(rep(card_vals, 4))
+deck <- expand.grid(rank = ranks, suit = suits)
+deck <- data.frame(deck, value = card_vals, rank_order = rep(1:13, 4))
+
+# Deal a hand and sort by card
+hand <- sample_n(deck, 6) %>% arrange(rank)
+
+# TEST FOR PAIRS
+pr_cnt <- hand %>% count(rank) %>%
+  filter(n != 1) %>% .$n
+
+# DEFINE MATRICES TO TEST FOR RUNS
+# 4 card runs
+single_4 <- c(1, 1, 1)
+double_3 <- unique.matrix(permutations(3, 3, v = c(0, 1, 1), set = FALSE))
+run_4_mat <- rbind(single_4, double_3)
+
+# 5 card runs
+single_5 <- c(1, 1, 1, 1)
+triple_3 <- unique.matrix(permutations(4, 4, v = c(1, 0, 0, 1), set = FALSE))
+run_5_mat <- rbind(single_5, triple_3)
+
+# 6 card runs
+single_6 <- c(1, 1, 1, 1, 1)
+double_5 <- unique.matrix(permutations(5, 5, v = c(1, 0, 1, 1, 1), set = FALSE))
+triple_4 <- unique.matrix(permutations(5, 5, v = c(1, 0, 0, 1, 1), set = FALSE))
+dubdub_3 <- unique.matrix(permutations(5, 5, v = c(1, 0, 0, 0, 1), set = FALSE))
+quaddub_3 <- unique.matrix(permutations(5, 5, v = c(0, 1, 0, 1, 0), set = FALSE))
+run_6_mat <- rbind(single_6, double_5, triple_4, dubdub_3, quaddub_3)
+
+# TEST FOR FLUSH (4 or more of the same suit)
+fl_cnt <- hand %>%
+  count(suit, name = "Count") %>%
+  filter(Count >= 4) %>% .$Count
+
+# Get totals 
+num_15s <- count_fifs(hand$value)
+num_pairs <- sum(factorial(pr_cnt)/factorial(2)*(factorial(pr_cnt-2)))
+num_runs <- length(runs) - 1
+num_flush <- ifelse(!is_empty(fl_cnt), 1, 0)
+
+# Tally scores 
+score_15s <- num_15s*2
+score_pairs <- num_pairs*2
+#score_runs <- runs$score
+score_flush <- ifelse(!is_empty(fl_cnt), fl_cnt, 0)
+#total <- sum(score_15s, score_pairs, score_runs, score_flush)
+#scorecard <- tibble(Fifteens = score_15s, Pairs = score_pairs, 
+                    # Runs = score_runs, Flush = score_flush, 
+                    # Total = total)
+runs <- xtract_run(hand$rank_order)
+runs 
+print(hand[1:2])
+print(scorecard)
