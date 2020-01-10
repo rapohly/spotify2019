@@ -1,0 +1,87 @@
+---
+title: "Top 50 Spotify Songs of 2019 - Exploratory Data Analysis"
+author: "Rick Pohly"
+date: "January 7, 2020"
+output:
+pdf_document: default
+html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**MOTIVATION**
+
+As a musician, I'm always interested in what drives today's popular music. Since the music industry has experienced a massive paradigm shift towards streaming-based services over the last decade, a plethora of data are now available for all sorts of interesting analyses. I recognize that this dataset is tiny in scope (only 50 rows), but I chose it specifically for that reason, as a load-light way to practice, being a beginner in data science. I try to be careful not to draw any lofty conclusions given the virtually microscopic scale of this dataset. This is intended to be a very simple analysis for the purpose of getting the feel of what data scientists do.
+
+**Loading Data**
+
+We begin by loading libraries and the wrangled top50.rda file into the object "topsongs" and converting the categorical "genre" variable to a factor.
+
+```{r load}
+# Load libraries and data
+if(!require(ggplot2)){install.packages("ggplot2")}
+if(!require(dplyr)){install.packages("dplyr")}
+if(!require(RColorBrewer)){install.packages("RColorBrewer")}
+
+load("rda/top50.rda")
+
+# Convert categoricals to factors
+topsongs <- topsongs %>% mutate_at(vars(genre), as.factor)
+```
+
+**Genre Grouping**
+
+Having a closer look at the genre variable, we see that it contains 21 unique values. Upon inspection, it becomes clear that these are in fact subgenres. Since the dataset is only 50 rows, it might be wise to group these subgenres into the more general genres of pop, hip-hop, dance and latin for better stratification later.
+
+```{r genre grouping}
+length(levels(topsongs$genre))
+levels(topsongs$genre)
+
+# Group subgenres into more general genres
+topsongs <- topsongs %>% 
+  mutate(genre_group = as.factor(case_when(
+    genre %in% c("atl hip hop", "escape room", "canadian hip hop", 
+                 "dfw rap", "country rap") ~ "Hip-Hop",
+    genre %in% c("brostep", "australian pop", "canadian pop",
+                 "panamanian pop", "boy band", "electropop",
+                 "pop") ~ "Pop",
+    genre %in% c("latin", "r&b en espanol", "reggaeton", 
+                 "reggaeton flow") ~ "Latin",
+    genre %in% c("dance pop", "pop house", "trap music", 
+                 "big room", "edm") ~ "Dance")))
+```
+
+**Summary**
+
+Looking at a summary of the numeric variables, we see that there is not a whole lot of variability for popularity. Values range from 70 to 95 with a mean value of 87.5 and a standard deviation of about 4.5. Most songs have a popularity value of around 88. This is not unexpected. Since the dataset consists of the top 50 Spotify songs of 2019, it's safe to say that, by definition, *every* song is popular. Therefore, we will ignore this variable as a consequence of this lack of signal.
+
+```{r summary}
+# Summarize just the numeric data
+summary(topsongs[,4:13])
+sd(topsongs$popularity)
+
+# Peek at popularity distribution
+topsongs %>% ggplot(aes(x = popularity)) +
+  theme_light() +
+  geom_histogram(col = "black", binwidth = 1) +
+  labs(x = "Popularity", y = "Song Count") +
+  ggtitle("Popularity Distribution")
+```
+
+Stratifying by the generalized genre groups created earlier, we can gain some interesting insights.
+
+```{r strat by genre}
+# Which is the most common genre of the top 50?
+topsongs %>% ggplot(aes(x = genre_group)) +
+  theme_minimal() +
+  geom_bar(aes(fill = genre_group)) +
+  scale_fill_brewer(palette = "RdBu") +
+  labs(x = "Genre", y = "Song Count") +
+  ggtitle("Song Counts by Genre")
+
+table(topsongs$genre_group)
+```
+
+Perhaps unsurprisingly, most of the songs in the dataset (17) fall into the category of pop, with dance a close a second, followed by latin and lastly, hip-hop.

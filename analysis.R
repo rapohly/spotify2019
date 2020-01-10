@@ -1,72 +1,81 @@
-library(ggplot2)
-library(dplyr)
-library(stringr)
+# Load libraries and data, setup
+if(!require(ggplot2)){install.packages("ggplot2")}
+if(!require(dplyr)){install.packages("dplyr")}
+if(!require(RColorBrewer)){install.packages("RColorBrewer")}
 
 load("rda/top50.rda")
 
-# Convert genre to factor
+# Convert categoricals to factors
 topsongs <- topsongs %>% mutate_at(vars(genre), as.factor)
 
-# Summarize just the numeric data
-summary(topsongs[,4:ncol(topsongs)])
-
 # Group subgenres into more general genres
-ind <- str_detect(topsongs$genre, "[^*a-z]rap|hip|room")
-hiphop.grp <- topsongs$genre[ind]
-ind <- str_detect(topsongs$genre, "pop")
-pop.grp <- topsongs$genre[ind]
-ind <- str_detect(topsongs$genre, "latin|reggaeton|espanol")
-latin.grp <- topsongs$genre[ind]
-ind <- str_detect(topsongs$genre, "trap|bro|big|boy|edm")
-dance.grp <- topsongs$genre[ind]
+length(levels(topsongs$genre))
+levels(topsongs$genre)
 
 topsongs <- topsongs %>% 
   mutate(genre_group = as.factor(case_when(
-    genre %in% hiphop.grp ~ "Hip-Hop",
-    genre %in% pop.grp ~ "Pop",
-    genre %in% latin.grp ~ "Latin",
-    genre %in% dance.grp ~ "Dance")))
+    genre %in% c("atl hip hop", "escape room", "canadian hip hop", 
+                 "dfw rap", "country rap") ~ "Hip-Hop",
+    genre %in% c("brostep", "australian pop", "canadian pop",
+                 "panamanian pop", "boy band", "electropop",
+                 "pop") ~ "Pop",
+    genre %in% c("latin", "r&b en espanol", "reggaeton", 
+                 "reggaeton flow") ~ "Latin",
+    genre %in% c("dance pop", "pop house", "trap music", 
+                 "big room", "edm") ~ "Dance")))
 
-rm(ind, hiphop.grp, pop.grp, latin.grp, dance.grp)
+# Summarize just the numeric data
+summary(topsongs[,4:13])
+sd(topsongs$popularity)
 
-# What are the top 10 most popular songs?
+# Peek at popularity distribution
+topsongs %>% ggplot(aes(x = popularity)) +
+  theme_light() +
+  geom_histogram(col = "black", binwidth = 1) +
+  labs(x = "Popularity", y = "Song Count") +
+  ggtitle("Popularity Distribution")
+
+# Which is the most common genre of the top 50?
+topsongs %>% ggplot(aes(x = genre_group)) +
+  theme_minimal() +
+  geom_bar(aes(fill = genre_group)) +
+  scale_fill_brewer(palette = "RdBu") +
+  labs(x = "Genre", y = "Song Count") +
+  ggtitle("Song Counts by Genre")
+
+table(topsongs$genre_group)
+
+# What are the top 5 songs by popularity?
 topsongs %>% arrange(desc(popularity)) %>%
-  slice(1:10)
-
-# Are songs with higher valence more popular?
-topsongs %>% ggplot(aes(x = valence, y = popularity)) +
-  geom_point()
+  slice(1:5) 
 
 # Is there a correlation between energy and bpm?
 topsongs %>% ggplot(aes(x = bpm, y = energy)) +
   geom_point()
 
 # Loudness and energy?
-topsongs %>% ggplot(aes(x = loudness, y = energy,
-                        color = genre_group)) +
-  geom_point()
+topsongs %>% ggplot(aes(x = loudness, y = energy)) +
+  geom_point(aes(color = valence)) + 
+  geom_smooth(method = "lm")
 
 # Danceability and energy?
 topsongs %>% ggplot(aes(x = danceability, y = energy)) +
-  geom_point()
+  geom_point() 
 
 # Acousticness and energy?
 topsongs %>% ggplot(aes(x = acousticness, y = energy)) +
   geom_point()
 
-# Energy and popularity?
-topsongs %>% ggplot(aes(x = popularity, y = energy)) +
-  geom_point()
-
-# Which is the most common genre of the top 50?
-topsongs %>% ggplot(aes(x = genre_group)) +
-  theme_minimal() +
-  geom_bar(fill = "red") +
-  labs(x = "Genre", y = "Song Count")
-
 # Explore distributions
-topsongs %>% ggplot(aes(x = liveness, fill = genre_group)) +
+topsongs %>% ggplot(aes(x = liveness)) +
   geom_histogram(col = "black", binwidth = 5)
 
 topsongs %>% ggplot(aes(x = acousticness)) +
   geom_histogram(col = "black", binwidth = 5)
+
+topsongs %>% ggplot(aes(x = genre_group, y = energy)) +
+  theme_light() +
+  geom_boxplot(aes(fill = genre_group)) + 
+  scale_fill_brewer(palette = "RdBu") +
+  labs(x = "Genre", y = "Energy") +
+  ggtitle("Energy by Genre")
