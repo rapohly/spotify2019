@@ -17,7 +17,7 @@ As a musician, I'm always interested in what drives today's popular music. Since
 
 **Loading Data**
 
-We begin by loading libraries and the wrangled top50.rda file into the object "topsongs" and converting the categorical "genre" variable to a factor.
+We begin by loading libraries and the wrangled top50.rda file into the object "topsongs" and converting the categorical genre variable to a factor.
 
 ```{r load}
 # Load libraries and data

@@ -373,11 +373,8 @@ summary {
 <p><strong>MOTIVATION</strong></p>
 <p>As a musician, I’m always interested in what drives today’s popular music. Since the music industry has experienced a massive paradigm shift towards streaming-based services over the last decade, a plethora of data are now available for all sorts of interesting analyses. I recognize that this dataset is tiny in scope (only 50 rows), but I chose it specifically for that reason, as a load-light way to practice, being a beginner in data science. I try to be careful not to draw any lofty conclusions given the virtually microscopic scale of this dataset. This is intended to be a very simple analysis for the purpose of getting the feel of what data scientists do.</p>
 <p><strong>Loading Data</strong></p>
-<p>We begin by loading libraries and the wrangled top50.rda file into the object “topsongs” and converting the categorical “genre” variable to a factor.</p>
-<pre class="r"><code># Load libraries and data
-if(!require(ggplot2)){install.packages(&quot;ggplot2&quot;)}</code></pre>
+<p>We begin by loading libraries and the wrangled top50.rda file into the object “topsongs” and converting the categorical genre variable to a factor.</p>
 <pre><code>## Loading required package: ggplot2</code></pre>
-<pre class="r"><code>if(!require(dplyr)){install.packages(&quot;dplyr&quot;)}</code></pre>
 <pre><code>## Loading required package: dplyr</code></pre>
 <pre><code>## 
 ## Attaching package: 'dplyr'</code></pre>
@@ -387,10 +384,7 @@ if(!require(ggplot2)){install.packages(&quot;ggplot2&quot;)}</code></pre>
 <pre><code>## The following objects are masked from 'package:base':
 ## 
 ##     intersect, setdiff, setequal, union</code></pre>
-<pre class="r"><code>load(&quot;rda/top50.rda&quot;)
-
-# Convert categoricals to factors
-topsongs &lt;- topsongs %&gt;% mutate_at(vars(genre), as.factor)</code></pre>
+<pre><code>## Loading required package: RColorBrewer</code></pre>
 <p><strong>Genre Grouping</strong></p>
 <p>Having a closer look at the genre variable, we see that it contains 21 unique values. Upon inspection, it becomes clear that these are in fact subgenres. Since the dataset is only 50 rows, it might be wise to group these subgenres into the more general genres of pop, hip-hop, dance and latin for better stratification later.</p>
 <pre class="r"><code>length(levels(topsongs$genre))</code></pre>

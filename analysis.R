@@ -29,47 +29,60 @@ summary(topsongs[,4:13])
 sd(topsongs$popularity)
 
 # Peek at popularity distribution
-topsongs %>% ggplot(aes(x = popularity)) +
+popdist.plt <- topsongs %>% ggplot(aes(x = popularity)) +
   theme_light() +
   geom_histogram(col = "black", binwidth = 1) +
   labs(x = "Popularity", y = "Song Count") +
   ggtitle("Popularity Distribution")
+popdist.plt
+
+ggsave("figs/popdist.png", plot = popdist.plt)
 
 # Which is the most common genre of the top 50?
-topsongs %>% ggplot(aes(x = genre_group)) +
+genres.plt <- topsongs %>% ggplot(aes(x = genre_group)) +
   theme_minimal() +
   geom_bar(aes(fill = genre_group)) +
   scale_fill_brewer(palette = "RdBu") +
   labs(x = "Genre", y = "Song Count") +
   ggtitle("Song Counts by Genre")
+genres.plt
+
+ggsave("figs/genres.png", plot = genres.plt)
 
 table(topsongs$genre_group)
 
-# What are the top 5 songs by popularity?
-topsongs %>% arrange(desc(popularity)) %>%
-  slice(1:5) 
+# Who had the most hits in pop?
+topsongs %>% filter(genre_group == "Pop") %>%
+  ggplot(aes(x = artist)) +
+  geom_bar() +
+  coord_flip()
 
 # Is there a correlation between energy and bpm?
 topsongs %>% ggplot(aes(x = bpm, y = energy)) +
   geom_point()
 
-# Loudness and energy?
-topsongs %>% ggplot(aes(x = loudness, y = energy)) +
-  geom_point(aes(color = valence)) + 
-  geom_smooth(method = "lm")
+cor(topsongs$bpm, topsongs$energy)
 
-# Danceability and energy?
-topsongs %>% ggplot(aes(x = danceability, y = energy)) +
-  geom_point() 
+# Loudness and energy?
+topsongs %>% ggplot(aes(x = loudness, y = energy,
+                        size = bpm)) +
+  theme_light() +
+  geom_point(aes(color = genre_group), alpha = 0.6) +
+  scale_color_brewer(palette = "RdBu") +
+  geom_smooth(method = "lm") +
+  labs(x = "Loudness", y = "Energy") +
+  ggtitle("Energy vs Loudness")
+
+rho <- cor(topsongs$loudness, topsongs$energy)
+rho
 
 # Acousticness and energy?
 topsongs %>% ggplot(aes(x = acousticness, y = energy)) +
   geom_point()
 
-# Explore distributions
-topsongs %>% ggplot(aes(x = liveness)) +
-  geom_histogram(col = "black", binwidth = 5)
+cor(topsongs$acousticness, topsongs$energy)
 
+# Explore distributions
 topsongs %>% ggplot(aes(x = acousticness)) +
   geom_histogram(col = "black", binwidth = 5)
 
@@ -79,3 +92,6 @@ topsongs %>% ggplot(aes(x = genre_group, y = energy)) +
   scale_fill_brewer(palette = "RdBu") +
   labs(x = "Genre", y = "Energy") +
   ggtitle("Energy by Genre")
+
+topsongs %>% ggplot(aes(x = genre_group, y = loudness)) +
+  geom_density()
