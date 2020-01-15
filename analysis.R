@@ -1,4 +1,6 @@
 # Load libraries and data, setup
+options(digits = 3)
+
 if(!require(ggplot2)){install.packages("ggplot2")}
 if(!require(dplyr)){install.packages("dplyr")}
 if(!require(RColorBrewer)){install.packages("RColorBrewer")}
@@ -51,47 +53,75 @@ ggsave("figs/genres.png", plot = genres.plt)
 
 table(topsongs$genre_group)
 
-# Who had the most hits in pop?
-topsongs %>% filter(genre_group == "Pop") %>%
-  ggplot(aes(x = artist)) +
-  geom_bar() +
-  coord_flip()
-
-# Is there a correlation between energy and bpm?
-topsongs %>% ggplot(aes(x = bpm, y = energy)) +
-  geom_point()
-
-cor(topsongs$bpm, topsongs$energy)
-
-# Loudness and energy?
-topsongs %>% ggplot(aes(x = loudness, y = energy,
-                        size = bpm)) +
-  theme_light() +
-  geom_point(aes(color = genre_group), alpha = 0.6) +
-  scale_color_brewer(palette = "RdBu") +
-  geom_smooth(method = "lm") +
-  labs(x = "Loudness", y = "Energy") +
-  ggtitle("Energy vs Loudness")
-
-rho <- cor(topsongs$loudness, topsongs$energy)
-rho
-
-# Acousticness and energy?
-topsongs %>% ggplot(aes(x = acousticness, y = energy)) +
-  geom_point()
-
-cor(topsongs$acousticness, topsongs$energy)
-
 # Explore distributions
-topsongs %>% ggplot(aes(x = acousticness)) +
-  geom_histogram(col = "black", binwidth = 5)
-
-topsongs %>% ggplot(aes(x = genre_group, y = energy)) +
+energybox.plt <- topsongs %>% 
+  ggplot(aes(x = genre_group, y = energy)) +
   theme_light() +
   geom_boxplot(aes(fill = genre_group)) + 
   scale_fill_brewer(palette = "RdBu") +
   labs(x = "Genre", y = "Energy") +
   ggtitle("Energy by Genre")
+energybox.plt
 
-topsongs %>% ggplot(aes(x = genre_group, y = loudness)) +
-  geom_density()
+ggsave("figs/energybox.png", plot = energybox.plt)
+
+energydens.plt <- topsongs %>% 
+  ggplot(aes(x = energy, fill = genre_group)) +
+  theme_light() +
+  geom_density(alpha = 0.4) + 
+  scale_fill_brewer(palette = "RdBu") +
+  labs(x = "Energy", y = "Density") +
+  ggtitle("Energy Density by Genre")
+energydens.plt
+
+ggsave("figs/energydens.png", plot = energydens.plt)
+
+bpmbox.plt <- topsongs %>%
+  ggplot(aes(x = genre_group, y = bpm)) +
+  theme_light() +
+  geom_boxplot(aes(fill = genre_group)) + 
+  scale_fill_brewer(palette = "RdBu") +
+  labs(x = "Genre", y = "Beats Per Minute") +
+  ggtitle("Beats Per Minute by Genre")
+bpmbox.plt
+
+ggsave("figs/bpmbox.png", plot = bpmbox.plt)
+
+bpmdens.plt <- topsongs %>% 
+  ggplot(aes(x = bpm, fill = genre_group)) +
+  theme_light() +
+  geom_density(alpha = 0.4) + 
+  scale_fill_brewer(palette = "RdBu") +
+  labs(x = "Beats Per Minute", y = "Density") +
+  ggtitle("BPM Density by Genre")
+bpmdens.plt
+
+ggsave("figs/bpmdens.png", plot = bpmdens.plt)
+
+# Explore correlations
+bpmenergy.plt <- topsongs %>% group_by(genre_group) %>%
+  mutate(rho = cor(energy, bpm)) %>%
+  ggplot(aes(x = bpm, y = energy)) +
+  theme_light() +
+  geom_point() +
+  facet_wrap(genre_group ~ rho) +
+  labs(x = "Beats Per Minute", y = "Energy") +
+  ggtitle("Stratified BPM vs Energy")
+bpmenergy.plt
+
+ggsave("figs/bpmenergy.png", plot = bpmenergy.plt)
+
+energyloud.plt <- topsongs %>%
+  ggplot(aes(x = loudness, y = energy)) +
+  theme_light() +
+  geom_point(aes(color = genre_group), 
+             alpha = 0.8) +
+  scale_color_brewer(palette = "RdBu") +
+  geom_smooth(method = "lm") +
+  labs(x = "Loudness", y = "Energy") +
+  ggtitle("Energy vs Loudness")
+energyloud.plt
+
+ggsave("figs/energyloud.png", plot = energyloud.plt)
+
+cor(topsongs$loudness, topsongs$energy)
