@@ -98,7 +98,8 @@ bpmdens.plt
 
 ggsave("figs/bpmdens.png", plot = bpmdens.plt)
 
-# Explore correlations
+# EXPLORE CORRELATIONS
+# BPM vs energy
 bpmenergy.plt <- topsongs %>% group_by(genre_group) %>%
   mutate(rho = cor(energy, bpm)) %>%
   ggplot(aes(x = bpm, y = energy)) +
@@ -111,6 +112,7 @@ bpmenergy.plt
 
 ggsave("figs/bpmenergy.png", plot = bpmenergy.plt)
 
+# Energy vs loudness
 energyloud.plt <- topsongs %>%
   ggplot(aes(x = loudness, y = energy)) +
   theme_light() +
@@ -125,3 +127,19 @@ energyloud.plt
 ggsave("figs/energyloud.png", plot = energyloud.plt)
 
 cor(topsongs$loudness, topsongs$energy)
+
+speechbox.plt <- topsongs %>% ggplot(aes(x = genre_group, 
+                        y = speechiness,
+                        fill = genre_group)) +
+  theme_light() +
+  geom_boxplot() +
+  scale_fill_brewer(palette = "RdBu") +
+  labs(x = "Genre", y = "Speechiness") +
+  ggtitle("Speechiness by Genre")
+speechbox.plt
+
+ggsave("figs/speechbox.png", plot = speechbox.plt)
+
+topsongs %>% group_by(genre_group) %>%
+  summarize(mean = mean(speechiness)) %>%
+  arrange(desc(mean))

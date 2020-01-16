@@ -88,7 +88,7 @@ table(topsongs$genre_group)
 
 First, and perhaps unsurprisingly, most of the songs in the dataset (17) fall into the category of pop, with dance a close a second, followed by latin and lastly, hip-hop. 
 
-Next, let's have a look at deeper look. The energy, bpm and loudness variables are of some interest. Is there a connection between the amount of energy a song in a genre has and its speed or loudness? Is this a commonality among hit songs in general? 
+Next, let's have a look at deeper look. The energy, bpm, speechiness and loudness variables are of some interest. Is there a connection between the amount of energy a song in a genre has and its speed or loudness? Is this a commonality among hit songs in general? Will hip-hop be the song with the highest speechiness value as we might expect?
 
 ```{r energy boxplot}
 energybox.plt <- topsongs %>% 
@@ -148,6 +148,30 @@ cor(topsongs$loudness, topsongs$energy)
 ```
 
 The value of rho for these two variables is 0.671, suggesting that loudness and energy are correlated. It is likely that if the dataset were larger, this rho value would be even higher. 
+
+Turning now to speechiness, we discover something interesting.
+
+```{r speechiness}
+speechbox.plt <- topsongs %>% ggplot(aes(x = genre_group, 
+                        y = speechiness,
+                        fill = genre_group)) +
+  theme_light() +
+  geom_boxplot() +
+  scale_fill_brewer(palette = "RdBu") +
+  labs(x = "Genre", y = "Speechiness") +
+  ggtitle("Speechiness by Genre")
+speechbox.plt
+```
+
+It turns out that hip-hop does not have the highest speechiness value, and in fact has the lowest mean speechiness value of all four genre groups! 
+
+```{r mean speechiness}
+topsongs %>% group_by(genre_group) %>%
+  summarize(mean = mean(speechiness)) %>%
+  arrange(desc(mean))
+```
+
+Latin music seems to take the lead in this category. Even dance music, which we normally don't think of as having much spoken word in at all, surpasses hip-hop. 
 
 **CONCLUSION**
 
